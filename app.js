@@ -22,7 +22,7 @@ app.use((error, req, res, next) => {
 });
 mongoose
   .connect(
-    "mongodb+srv://Akash:Admin123@cluster0.f96zl.mongodb.net/REST-Pet-Shop?retryWrites=true&w=majority"
+    "Enter your mongoDB connection URI String"
   )
   .then(() => {
       console.log('Database is connected successfully');
