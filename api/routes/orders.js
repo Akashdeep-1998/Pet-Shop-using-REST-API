@@ -4,7 +4,7 @@ const mongoose=require('mongoose');
 const orderDb=require('../model/order');
 
 Router.get("/", (req, res, next) => {
-  orderDb.find().select('pet _id quantity').then(result=>{
+  orderDb.find().select('pet _id quantity').populate('pet').then(result=>{
     res.status(200).json({
       total_order:result.length,
       orders:result
@@ -33,7 +33,7 @@ Router.post("/", (req, res, next) => {
 
 Router.get("/:orderId", (req, res, next)=>{
   const id=req.params.orderId;
-  orderDb.findById(id).select('pet quantity').then(result=>{
+  orderDb.findById(id).select('pet quantity').populate('pet').then(result=>{
     if(result){
       console.log(result);
       res.status(200).json({
@@ -51,7 +51,13 @@ Router.get("/:orderId", (req, res, next)=>{
 })
 
 Router.delete("/:orderId", (req, res, next) => {
-  res.status(200).json({ message: "Order deleted" });
+  orderDb.remove({_id:req.params.orderId}).then(result=>{
+    console.log(result);
+    res.status(200).json(result);
+  }).catch(err=>{
+    console.log(err);
+    res.status(500).json({error:err});
+  })
 });
 
 module.exports = Router;

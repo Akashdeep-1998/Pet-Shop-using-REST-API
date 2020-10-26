@@ -1,7 +1,9 @@
 const express = require("express");
 const Router = express.Router();
 const mongoose = require("mongoose");
+const multer=require('multer');
 const petDb = require("../model/pet");
+const upload=multer({dest:'uploads/'})
 
 Router.get("/", (req, res, next) => {
   petDb.find().then(result=>{
@@ -18,11 +20,13 @@ Router.get("/", (req, res, next) => {
   })
 });
 
-Router.post("/", (req, res, next) => {
+Router.post("/",upload.single('petImage'),(req, res, next) => {
+  console.log(req.file);
   const pets = new petDb({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
+
   });
   pets
     .save()
