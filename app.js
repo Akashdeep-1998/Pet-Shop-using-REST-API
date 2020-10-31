@@ -4,12 +4,14 @@ const BodyParser = require("body-parser");
 const petRoutes = require("./api/routes/pets");
 const orderRoutes = require("./api/routes/orders");
 const mongoose = require("mongoose");
+const userRoutes=require('./api/routes/user');
 const PORT = process.env.PORT || 2000;
 
 app.use(BodyParser.urlencoded({ extended: false }));
 app.use(BodyParser.json());
 app.use("/pets", petRoutes);
 app.use("/orders", orderRoutes);
+app.use("/user",userRoutes);
 app.use((req, res, next) => {
   const error = new Error("Not found!");
   error.status = 404;
@@ -22,7 +24,7 @@ app.use((error, req, res, next) => {
 });
 mongoose
   .connect(
-    "Enter your mongoDB connection URI String"
+    "Enter Your mongoDB srv string.. "
   )
   .then(() => {
       console.log('Database is connected successfully');

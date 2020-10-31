@@ -1,85 +1,39 @@
 const express = require("express");
 const Router = express.Router();
-const mongoose = require("mongoose");
-const multer=require('multer');
-const petDb = require("../model/pet");
-const upload=multer({dest:'uploads/'})
+const multer = require("multer");
+const auth = require("../authentication/auth");
+const petsController = require("../controllers/pets");
 
-Router.get("/", (req, res, next) => {
-  petDb.find().then(result=>{
-    if(result){
-      res.status(200).json(result);
-    }
-    else{
-      res.status(404).json({message:"Not found the pets!!"})
-    }
-
-  }).catch(err=>{
-    console.log(err);
-    res.status(500).json({error:err})
-  })
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
 });
 
-Router.post("/",upload.single('petImage'),(req, res, next) => {
-  console.log(req.file);
-  const pets = new petDb({
-    _id: new mongoose.Types.ObjectId(),
-    name: req.body.name,
-    price: req.body.price,
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    cb(null, true);
+  } else {
+    cb(null, false); //callback for not accepting the file if file format is not jpeg or png.
+  }
+};
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1024 * 1024 * 5 },
+  fileFilter: fileFilter,
+}); //5mb file(measured in bytes)
 
-  });
-  pets
-    .save()
-    .then((result) => {
-      console.log(result);
-      res
-        .status(201)
-        .json({ message: "Successfully created Pet!", createdPet: result });
-    })
-    .catch((err) => console.log(err));
-});
+Router.get("/", petsController.getAllPets);
 
-Router.get("/:petId", (req, res, next) => {
-  const id = req.params.petId;
-  petDb
-    .findById(id)
-    .then((result) => {
-      console.log(result);
-      if(result){
-        res.status(200).json({ result });      
-      }
-      else{
-        res.status(404).json({message:"Pet not found with this id!!"})
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({ error: err });
-    });
-});
+Router.post("/", auth, upload.single("petImage"), petsController.addPet);
 
-Router.delete("/:petId", (req, res, next) => {
-  const id = req.params.petId;
-  petDb.remove({_id:id}).then(result=>{
-    console.log(result);
-    res.status(200).json(result);
-  }).catch(err=>{
-    console.log(err);
-    res.status(500).json({error:err});
-  })
-});
+Router.get("/:petId", petsController.getSinglePet);
 
-Router.patch('/:petId',(req,res,next)=>{
-  const id=req.params.petId;
-  petDb.update({_id:id},{$set:{name:req.body.newName, price:req.body.newPrice}})
-  .then(result=>{
-    console.log(result);
-    res.status(201).json({message:"pet is updated!!", updatedPet:result});
-  })
-  .catch(err=>{
-    console.log(err);
-    res.status(500).json({error:err});
-  })
-})
+Router.delete("/:petId", auth, petsController.deletePet);
+
+Router.patch("/:petId", auth, petsController.patchPet);
 
 module.exports = Router;
